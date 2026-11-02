@@ -1,18 +1,38 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-import random
+import csv
 import time
 
 app = FastAPI(title="AstroPulse AI Backend", version="1.0")
 
-# Security: Configure CORS so the Next.js frontend can talk to this API
+# Allow the frontend to communicate with this backend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], # Update this to your Vercel/Render URL later for security
+    allow_origins=["*"], 
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# 1. Load the NASA data into memory when the server starts
+telemetry_data = []
+current_index = 0
+
+try:
+    with open("nasa_vitals.csv", "r") as file:
+        reader = csv.DictReader(file)
+        for row in reader:
+            # Convert string CSV data into proper numbers for the frontend and AI
+            telemetry_data.append({
+                "timestamp": int(row["timestamp"]),
+                "heart_rate": int(row["heart_rate"]),
+                "spo2": float(row["spo2"]),
+                "blood_pressure_systolic": int(row["blood_pressure_systolic"]),
+                "blood_pressure_diastolic": int(row["blood_pressure_diastolic"]),
+                "radiation_msv": float(row["radiation_msv"])
+            })
+except FileNotFoundError:
+    print("Warning: nasa_vitals.csv not found. Create it in the root directory.")
 
 @app.get("/")
 async def health_check():
@@ -21,14 +41,20 @@ async def health_check():
 @app.get("/api/telemetry")
 async def get_simulated_vitals():
     """
-    Temporary endpoint. Will be replaced by real NASA CSV data streaming.
-    Outputs simulated vitals for the frontend to start testing charts.
+    Reads the NASA CSV file row by row to simulate a live telemetry stream.
     """
-    return {
-        "timestamp": int(time.time()),
-        "heart_rate": random.randint(60, 100),       # BPM
-        "spo2": random.uniform(95.0, 100.0),         # Oxygen percentage
-        "blood_pressure_systolic": random.randint(110, 130),
-        "blood_pressure_diastolic": random.randint(70, 85),
-        "radiation_msv": random.uniform(0.1, 0.5)    # Millisieverts
-    }
+    global current_index
+    
+    if not telemetry_data:
+        return {"error": "NASA data not loaded."}
+    
+    # Grab the current row of data
+    data = telemetry_data[current_index]
+    
+    # Move to the next row for the next API call, loop back if at the end
+    current_index = (current_index + 1) % len(telemetry_data)
+    
+    # Overwrite the static CSV timestamp with the actual current time for the live charts
+    data["timestamp"] = int(time.time())
+    
+    return data
