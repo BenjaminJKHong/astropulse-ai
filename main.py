@@ -31,8 +31,6 @@ band_service = BandAgentService(
     telemetry_stream=telemetry_stream,
 )
 
-from ws_manager import manager
-
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """FastAPI lifespan: start BAND agent on startup, stop on shutdown."""
