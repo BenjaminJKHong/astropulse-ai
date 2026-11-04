@@ -72,6 +72,47 @@ Autonomous, real-time predictive biotelemetry and clinical triage surveillance f
 
 ---
 
+## WebSocket Endpoints
+
+| Endpoint | Data/Param | Description |
+| `/ws/telemetry?frequency={optional-parameter}` | sleep(float, default=1.0, Optional) | Handshake with AstroPulse websocket to retrive real-time data such as telemetry and triage every 1 second by default. The call frequency are adjustable |
+Sample Output (1s): /ws/telemetry
+```
+{
+    "telemetry": {
+        "timestamp": 1793801272,
+        "heart_rate": 72,
+        "spo2": 99.0,
+        "blood_pressure_systolic": 120,
+        "blood_pressure_diastolic": 80,
+        "radiation_msv": 0.12,
+        "astronaut_id": "Benjamin"
+    },
+    "triage": {
+        "astronaut_id": "Benjamin",
+        "timestamp": 1793801272,
+        "triage_level": "NOMINAL",
+        "vital_status": {
+            "heart_rate_bpm": 72,
+            "spo2_percent": 99.0,
+            "blood_pressure": "120/80",
+            "radiation_msv": 0.12
+        },
+        "clinical_assessment": "NOMINAL: Astronaut Benjamin's physiological markers are well within standard deep-space parameters (HR 72 BPM, SpO2 99.0%, BP 120/80).",
+        "primary_concern": "None - Vitals Stable",
+        "secondary_concerns": [],
+        "triage_warnings": [],
+        "immediate_actions": [
+            "Maintain baseline telemetry log; astronaut fit for flight duty."
+        ],
+        "requires_crew_intervention": false,
+        "telemetry_trend": "STABLE",
+        "response_time_ms": 0.03,
+        "source_model": "aerospace-clinical-expert-v1"
+    }
+}
+```
+
 ## Configuration (`.env`)
 
 To connect to Groq or Nebius:
